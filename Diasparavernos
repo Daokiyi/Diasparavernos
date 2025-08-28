@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cuenta regresiva para vernos ❤️ | 17 de septiembre (Lima)</title>
+  <meta name="description" content="Una página romántica con cuenta regresiva para el 17 de septiembre en Lima, con frases que se van mostrando solitas." />
+  <style>
+    :root{
+      --bg1:#ffe6ea; /* rosado claro */
+      --bg2:#fff8f0; /* cálido */
+      --ink:#3a2a2a;
+      --accent:#ff4d6d;
+      --card:#ffffffcc;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;
+      color:var(--ink);
+      background: radial-gradient(1200px 800px at 20% 10%, var(--bg1), transparent),
+                  radial-gradient(1200px 900px at 80% 90%, var(--bg2), #fff);
+      display:flex; align-items:center; justify-content:center;
+      overflow-x:hidden;
+    }
+    .container{
+      width:min(900px, 92vw);
+      background:var(--card);
+      backdrop-filter: blur(6px);
+      border:1px solid #fff2;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px #0000001a;
+      padding:24px; position:relative;
+    }
+    header{
+      text-align:center; margin-bottom:16px;
+    }
+    h1{margin:0 0 6px; font-weight:800; letter-spacing:.2px}
+    h1 .heart{color:var(--accent);}
+    .sub{opacity:.8}
+
+    .countdown{
+      display:grid; grid-template-columns: repeat(4, minmax(60px,1fr)); gap:12px;
+      margin: 18px auto 8px; width:min(720px, 100%);
+    }
+    .slot{
+      background:#fff; border-radius:20px; padding:16px; text-align:center;
+      box-shadow: inset 0 2px 8px #00000010;
+    }
+    .num{font-size: clamp(28px, 6vw, 56px); font-weight:900; line-height:1}
+    .label{margin-top:6px; font-size: .95rem; opacity:.75; text-transform:uppercase; letter-spacing:.06em}
+
+    .progress-wrap{margin: 14px auto 8px; width:min(640px, 100%);}
+    .progress{
+      height:10px; background:#fff; border-radius:999px; overflow:hidden; box-shadow: inset 0 1px 4px #00000014;
+    }
+    .bar{height:100%; width:0%}
+
+    .phrase{
+      margin: 18px auto 8px; width:min(720px, 100%);
+      text-align:center; font-size: clamp(16px, 3.2vw, 22px);
+      line-height:1.5; font-weight:600;
+      color:#4b2d2e;
+      min-height: 3.2em;
+    }
+    .fade{animation: fade 750ms ease}
+    @keyframes fade { from{opacity:0; transform: translateY(6px)} to{opacity:1; transform:none} }
+
+    footer{
+      margin-top:18px; text-align:center; font-size:.9rem; opacity:.7
+    }
+
+    /* Corazones flotando */
+    .hearts{ position:absolute; inset:0; pointer-events:none; overflow:hidden; border-radius:24px }
+    .hearts span{ position:absolute; bottom:-40px; font-size: 18px; color: var(--accent); opacity:.7; animation: floatUp 9s linear infinite; }
+    @keyframes floatUp {
+      0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: .0 }
+      10%{ opacity:.8 }
+      100% { transform: translateY(-120vh) translateX(var(--x)) rotate(360deg); opacity: 0 }
+    }
+    .badge{position:absolute; right:14px; top:14px; font-size:.85rem; background:#fff; padding:6px 10px; border-radius:999px; border: 1px solid #00000010; opacity:.8}
+
+    .today{display:none; text-align:center; margin: 8px 0 0; font-weight:700; color: var(--accent)}
+
+    @media (max-width:520px){
+      .countdown{grid-template-columns: repeat(2, 1fr)}
+    }
+  </style>
+</head>
+<body>
+  <main class="container" role="main" aria-live="polite">
+    <div class="badge">Zona horaria: Lima (UTC−05:00)</div>
+    <header>
+      <h1>Cuenta regresiva para vernos <span class="heart">❤️</span></h1>
+      <div class="sub">Nos vemos el <strong>17 de septiembre</strong> ❤️ </div>
+    </header>
+
+    <section class="countdown" aria-label="Cuenta regresiva">
+      <div class="slot"><div class="num" id="d">–</div><div class="label">Días</div></div>
+      <div class="slot"><div class="num" id="h">–</div><div class="label">Horas</div></div>
+      <div class="slot"><div class="num" id="m">–</div><div class="label">Minutos</div></div>
+      <div class="slot"><div class="num" id="s">–</div><div class="label">Segundos</div></div>
+    </section>
+
+    <div class="progress-wrap" aria-hidden="true">
+      <div class="progress"><div class="bar" id="bar"></div></div>
+    </div>
+
+    <div id="phrase" class="phrase">Cargando frases bonitas…</div>
+    <div id="today" class="today">¡Hoy nos vemos! ✨</div>
+
+    <div class="hearts" aria-hidden="true"></div>
+
+    <footer>
+      <div>Hecho con todo mi amor Marycielo💘</div>
+      <div style="margin-top:4px; font-size:.85rem">Puedes editar la fecha u hora en el código si hace falta.</div>
+    </footer>
+  </main>
+
+  <script>
+    // === CONFIGURACIÓN ===
+    // Fecha objetivo en hora de Lima. Perú no usa DST, así que -05:00 es estable.
+    // Cambia "00:00:00" por una hora específica si lo deseas (por ejemplo "18:00:00-05:00").
+    const TARGET_ISO = '2025-09-17T13:00:00-05:00';
+
+    // Frases románticas que rotan
+    const PHRASES = [
+      'Espero crear mas momento bonitos a tu lado.',
+      'Tu mirada es lo que llena mi corazon de felicidad.',
+      'No cuento horas: cuento latidos hasta verte.',
+      'Tu sonrisa es la razón de mis prontos.',
+      'Espero poder abrazarte tanto que el tiempo pueda pasar lento.',
+      'Cuando pienso en ti, me sale una sonrisa.',
+      'Faltan cada vez menos dias para estar a tu lado.',
+      'Eres mi mundo.',
+      'Donde sea, pero contigo.',
+      'Te pienso y el tiempo corre más rápido.'
+    ];
+
+    // Colores de la barra de progreso que van cambiando con el avance
+    const BAR_COLORS = ['#ffd1dc','#ffb3c1','#ff8fa3','#ff758f','#ff4d6d'];
+
+    // === LÓGICA ===
+    const target = new Date(TARGET_ISO); // instante exacto de Lima -05:00
+
+    // Calcula el porcentaje transcurrido desde ahora hasta la fecha objetivo, acotado a 0–100
+    function percentToTarget(now){
+      const startSpan = 1000 * 60 * 60 * 24 * 30; // ventana de 30 días para animar la barra (ajustable)
+      const remaining = target - now;
+      const pct = 100 - (remaining / startSpan) * 100;
+      return Math.max(0, Math.min(100, pct));
+    }
+
+    function pad(n){ return n.toString().padStart(2,'0'); }
+
+    const elD = document.getElementById('d');
+    const elH = document.getElementById('h');
+    const elM = document.getElementById('m');
+    const elS = document.getElementById('s');
+    const elBar = document.getElementById('bar');
+    const elPhrase = document.getElementById('phrase');
+    const elToday = document.getElementById('today');
+
+    let phraseIdx = 0;
+
+    function tick(){
+      const now = new Date();
+      let diff = target - now; // milisegundos
+
+      if(diff <= 0){
+        // Llegó el día ❤
+        elD.textContent = '00';
+        elH.textContent = '00';
+        elM.textContent = '00';
+        elS.textContent = '00';
+        elToday.style.display = 'block';
+        elPhrase.textContent = 'Llegó nuestro día. Te estoy esperando 💞';
+        elBar.style.width = '100%';
+        elBar.style.background = BAR_COLORS[BAR_COLORS.length-1];
+        document.title = '¡Hoy nos vemos! ❤️';
+        clearInterval(loop);
+        confetti();
+        return;
+      }
+
+      const sec = Math.floor(diff / 1000) % 60;
+      const min = Math.floor(diff / (1000*60)) % 60;
+      const hr  = Math.floor(diff / (1000*60*60)) % 24;
+      const day = Math.floor(diff / (1000*60*60*24));
+
+      elD.textContent = pad(day);
+      elH.textContent = pad(hr);
+      elM.textContent = pad(min);
+      elS.textContent = pad(sec);
+
+      // Progreso decorativo
+      const p = percentToTarget(now);
+      elBar.style.width = p.toFixed(2) + '%';
+      const colorIdx = Math.min(BAR_COLORS.length-1, Math.floor((p/100) * BAR_COLORS.length));
+      elBar.style.background = BAR_COLORS[colorIdx];
+
+      // Cambia de frase cada 6 segundos
+      if(Math.floor(now/1000) % 6 === 0){
+        phraseIdx = (phraseIdx + 1) % PHRASES.length;
+        elPhrase.textContent = PHRASES[phraseIdx];
+        elPhrase.classList.remove('fade');
+        void elPhrase.offsetWidth; // reinicia animación
+        elPhrase.classList.add('fade');
+      }
+
+      // Título dinámico en la pestaña
+      document.title = `${day}d ${pad(hr)}:${pad(min)}:${pad(sec)} — Falta menos ❤️`;
+    }
+
+    const loop = setInterval(tick, 1000);
+    tick();
+
+    // Genera corazoncitos flotando
+    const hearts = document.querySelector('.hearts');
+    for(let i=0;i<24;i++){
+      const s = document.createElement('span');
+      s.textContent = Math.random() < .5 ? '❤' : '💖';
+      s.style.left = Math.random()*100 + '%';
+      s.style.setProperty('--x', (Math.random()*60-30) + 'px');
+      s.style.animationDelay = (Math.random()*9)+'s';
+      s.style.fontSize = (16 + Math.random()*18) + 'px';
+      hearts.appendChild(s);
+    }
+
+    // Mini confeti sin librerías
+    function confetti(){
+      const n = 120;
+      for(let i=0;i<n;i++){
+        const p = document.createElement('div');
+        p.style.position='fixed'; p.style.zIndex=9999; p.style.pointerEvents='none';
+        p.style.width='6px'; p.style.height='10px'; p.style.left=(Math.random()*100)+'vw';
+        p.style.top='-12px'; p.style.background=`hsl(${Math.random()*360},80%,60%)`;
+        p.style.transform=`rotate(${Math.random()*360}deg)`;
+        p.style.opacity=1;
+        document.body.appendChild(p);
+        const dx = (Math.random()*2-1)*40; // deriva lateral
+        const dur = 2200 + Math.random()*1800;
+        const anim = p.animate([
+          { transform: `translate(0,0) rotate(0deg)`, top:'-12px', opacity:1 },
+          { transform: `translate(${dx}px, 105vh) rotate(720deg)`, top:'100vh', opacity:.9 }
+        ], { duration: dur, easing:'cubic-bezier(.2,.8,.2,1)' });
+        anim.onfinish = ()=> p.remove();
+      }
+    }
+  </script>
+</body>
+</html>
